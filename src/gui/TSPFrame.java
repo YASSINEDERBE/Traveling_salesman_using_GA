@@ -1,43 +1,40 @@
 package gui;
 
-import algorithm.GreedyTSP;
 import model.City;
-import model.Path;
 
 import javax.swing.*;
-import java.util.Arrays;
+import java.awt.*;
 import java.util.List;
 
 public class TSPFrame extends JFrame {
-    public TSPFrame() {
-        setTitle("Traveling Salesman Problem Visualization");
-        setSize(600, 600);
+    public TSPFrame(List<City> cities) {
+        setTitle("Traveling Salesman Problem");
+        setSize(800, 600); 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); 
 
-        List<City> cities = Arrays.asList(
-            new City("A", 100, 200),
-            new City("B", 500, 300),
-            new City("C", 700, 500),
-            new City("D", 900, 400),
-            new City("E", 900, 200),
-            new City("F", 1200, 400),
-            new City("G", 1120, 900),
-            new City("H", 1000, 800),
-            new City("I", 350, 450),
-            new City("J", 150, 700)
-        );
-
-        GreedyTSP solver = new GreedyTSP();
-        Path shortestPath = solver.findShortestPath(cities);
-
-        TSPPanel panel = new TSPPanel(cities, shortestPath);
-        add(panel);
+        TSPPanel tspPanel = new TSPPanel(cities);
+        add(tspPanel); 
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            TSPFrame frame = new TSPFrame();
-            frame.setVisible(true);
+            // Créer quelques villes pour l'exemple
+            List<City> cities = List.of(
+                new City("City 1", 100, 100),
+                new City("City 2", 200, 150),
+                new City("City 3", 300, 200),
+                new City("City 4", 400, 250),
+                new City("City 5", 500, 300),
+                new City("City 6", 600, 350),
+                new City("City 7", 700, 400),
+                new City("City 8", 150, 450),
+                new City("City 9", 250, 500),
+                new City("City 10", 350, 550)
+            );
+
+            TSPFrame frame = new TSPFrame(cities);
+            frame.setVisible(true); // Afficher la fenêtre
         });
     }
 }

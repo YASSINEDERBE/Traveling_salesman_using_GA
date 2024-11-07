@@ -1,10 +1,9 @@
 package model;
 
-
 public class City {
     private String name;
-    private double x;
-    private double y;
+    private double x; // Coordonnée X
+    private double y; // Coordonnée Y
 
     public City(String name, double x, double y) {
         this.name = name;
@@ -25,13 +24,10 @@ public class City {
     }
 
     public double distanceTo(City other) {
-        double deltaX = this.x - other.x;
-        double deltaY = this.y - other.y;
-        return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        return Math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2));
     }
 
-    @Override
-    public String toString() {
-        return name + " (" + x + ", " + y + ")";
+    public double timeTo(City other) {
+        return distanceTo(other) / 50; // Par exemple, si la vitesse est de 50 unités
     }
 }
