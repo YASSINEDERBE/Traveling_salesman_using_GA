@@ -2,6 +2,7 @@ package gui;
 
 import algorithm.MultiObjectiveGA;
 import model.City;
+import model.Position;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -16,8 +17,8 @@ public class TSPPanel extends JPanel {
     private List<City> cities;
     private Image[] townIcons;
     private Image personIcon;
-    private final int ICON_WIDTH = 30;
-    private final int ICON_HEIGHT = 30;
+    private final int ICON_WIDTH = 60;
+    private final int ICON_HEIGHT = 60;
 
     private JTextField startingTownInput;
     private JButton startButton;
@@ -87,8 +88,8 @@ public class TSPPanel extends JPanel {
 
         for (int i = 0; i < cities.size(); i++) {
             City city = cities.get(i);
-            int x = (int) city.getX();
-            int y = (int) city.getY();
+            int x = (int) city.getPosition().getX();
+            int y = (int) city.getPosition().getY();
 
             Image resizedIcon = townIcons[i % townIcons.length].getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_SMOOTH);
             g2d.drawImage(resizedIcon, x - ICON_WIDTH / 2, y - ICON_HEIGHT / 2, null);
@@ -104,7 +105,7 @@ public class TSPPanel extends JPanel {
         int startCityIndex = findCityIndexByName(startingTownName);
 
         if (startCityIndex == -1) {
-            JOptionPane.showMessageDialog(this, "City not found!", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please check the city name", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -123,8 +124,8 @@ public class TSPPanel extends JPanel {
                 firstPath.add(startingCity);
             }
 
-            iconX = (int) startingCity.getX() - ICON_WIDTH / 2;
-            iconY = (int) startingCity.getY() - ICON_HEIGHT / 2;
+            iconX = (int) startingCity.getPosition().getX() - ICON_WIDTH / 2;
+            iconY = (int) startingCity.getPosition().getX() - ICON_HEIGHT / 2;
 
             // Mettre à jour l'affichage du meilleur chemin
             updateBestPathDisplay(firstPath);
@@ -167,8 +168,8 @@ public class TSPPanel extends JPanel {
         }
 
         City currentCity = path.get(currentCityIndex);
-        iconX = (int) currentCity.getX() - ICON_WIDTH / 2;
-        iconY = (int) currentCity.getY() - ICON_HEIGHT / 2;
+        iconX = (int) currentCity.getPosition().getX() - ICON_WIDTH / 2;
+        iconY = (int) currentCity.getPosition().getY() - ICON_HEIGHT / 2;
 
         currentCityIndex++;
         repaint();

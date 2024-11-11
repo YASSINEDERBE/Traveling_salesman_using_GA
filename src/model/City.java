@@ -2,29 +2,27 @@ package model;
 
 public class City {
     private String name;
-    private double x; // Coordonnée X
-    private double y; // Coordonnée Y
+    private Position position;
 
-    public City(String name, double x, double y) {
+    public Position getPosition() {
+        return position;
+    }
+
+    public void setPosition(Position position) {
+        this.position = position;
+    }
+
+    public City(String name, Position position) {
         this.name = name;
-        this.x = x;
-        this.y = y;
+        this.position = position;
     }
 
     public String getName() {
         return name;
     }
 
-    public double getX() {
-        return x;
-    }
-
-    public double getY() {
-        return y;
-    }
-
     public double distanceTo(City other) {
-        return Math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2));
+        return Math.sqrt(Math.pow(this.position.getX() - other.position.getX(), 2) + Math.pow(this.position.getY() - other.position.getY(), 2));
     }
 
     public double timeTo(City other) {
