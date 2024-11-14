@@ -9,6 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.Line2D;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,16 +18,21 @@ public class TSPPanel extends JPanel {
     private List<City> cities;
     private Image[] townIcons;
     private Image personIcon;
-    private final int ICON_WIDTH = 60;
-    private final int ICON_HEIGHT = 60;
+    private final int ICON_WIDTH = 90;
+    private final int ICON_HEIGHT = 90;
 
     private JTextField startingTownInput;
     private JButton startButton;
-    private JTextArea bestPathDisplay;  // Panneau pour afficher le meilleur chemin
+    private JTextArea bestPathDisplay;
     private int currentCityIndex = 0;
     private Timer animationTimer;
-    private int iconX, iconY;
-    private List<MultiObjectiveGA.Individual> bestPaths = new ArrayList<>(); // Initialiser ici
+    private double iconX, iconY;
+    private double targetX, targetY;
+    private double deltaX, deltaY;
+    private List<MultiObjectiveGA.Individual> bestPaths = new ArrayList<>();
+    private List<Line2D> trajectoryLines = new ArrayList<>();  // List to store drawn lines
+    private static final int ANIMATION_DELAY = 1;
+    private static final int STEP_SIZE = 5;
 
     public TSPPanel(List<City> cities) {
         this.cities = cities;
@@ -34,7 +40,6 @@ public class TSPPanel extends JPanel {
 
         loadIcons();
 
-        // Panneau de contrôle en haut
         JPanel controlPanel = new JPanel();
         startingTownInput = new JTextField(10);
         startButton = new JButton("Start Journey");
@@ -49,8 +54,7 @@ public class TSPPanel extends JPanel {
         controlPanel.add(new JLabel("Starting City:"));
         controlPanel.add(startingTownInput);
         controlPanel.add(startButton);
-        
-        // Panneau pour l'affichage du meilleur chemin
+
         bestPathDisplay = new JTextArea(120, 20);
         bestPathDisplay.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(bestPathDisplay);
@@ -58,7 +62,6 @@ public class TSPPanel extends JPanel {
         sidePanel.add(new JLabel("Best Path:"), BorderLayout.NORTH);
         sidePanel.add(scrollPane, BorderLayout.CENTER);
 
-        // Ajouter les panneaux au TSPPanel
         add(controlPanel, BorderLayout.NORTH);
         add(sidePanel, BorderLayout.EAST);
     }
@@ -86,28 +89,14 @@ public class TSPPanel extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Tracer les lignes du meilleur chemin
-        if (!bestPaths.isEmpty() && currentCityIndex < bestPaths.size()) {
-            // Récupérer le premier meilleur chemin (list de villes)
-            List<City> bestPath = bestPaths.get(0).getRoute();  // Ou une autre liste de votre choix si vous en avez plusieurs
-
-
-            for (int i = 0; i < bestPath.size() - 1; i++) {
-                City city1 = bestPath.get(i);
-                City city2 = bestPath.get(i + 1);
-                int x1 = (int) city1.getPosition().getX();
-                int y1 = (int) city1.getPosition().getY();
-                int x2 = (int) city2.getPosition().getX();
-                int y2 = (int) city2.getPosition().getY();
-
-
-                g2d.setColor(Color.BLUE);
-                g2d.setStroke(new BasicStroke(2));
-                g2d.drawLine(x1-15, y1 -15, x2-15, y2-15);
-            }
+        // Draw all the trajectory lines (from the previous path)
+        g2d.setColor(Color.BLUE);
+        g2d.setStroke(new BasicStroke(3));
+        for (Line2D line : trajectoryLines) {
+            g2d.draw(line);
         }
 
-        // Dessiner les icônes des villes
+        // Draw city icons
         for (int i = 0; i < cities.size(); i++) {
             City city = cities.get(i);
             int x = (int) city.getPosition().getX();
@@ -118,9 +107,9 @@ public class TSPPanel extends JPanel {
             g2d.drawString(city.getName(), x + 10, y);
         }
 
-        // Dessiner la personne si le chemin a démarré
-        if (!bestPaths.isEmpty() && currentCityIndex < bestPaths.size()) {
-            g2d.drawImage(personIcon.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_SMOOTH), iconX, iconY, null);
+        // Draw person icon if journey has started
+        if (!bestPaths.isEmpty() && currentCityIndex < bestPaths.get(0).getRoute().size()) {
+            g2d.drawImage(personIcon.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_SMOOTH), (int) iconX, (int) iconY, null);
         }
     }
 
@@ -148,31 +137,24 @@ public class TSPPanel extends JPanel {
                 firstPath.add(startingCity);
             }
 
-            iconX = (int) startingCity.getPosition().getX() - ICON_WIDTH / 2;
-            iconY = (int) startingCity.getPosition().getY() - ICON_HEIGHT / 2;
-
+            iconX = startingCity.getPosition().getX() - ICON_WIDTH / 2;
+            iconY = startingCity.getPosition().getY() - ICON_HEIGHT / 2;
 
             updateBestPathDisplay(firstPath);
 
             currentCityIndex = 0;
-            animationTimer = new Timer(1000, new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    moveToNextCity(firstPath);
-                }
-            });
-            animationTimer.start();
+            moveToNextCity(firstPath);
         } else {
             JOptionPane.showMessageDialog(this, "No valid routes found!", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-
 
     private void updateBestPathDisplay(List<City> path) {
         StringBuilder pathText = new StringBuilder();
         for (City city : path) {
             pathText.append(city.getName()).append(" -> ");
         }
-        pathText.append(path.get(0).getName()); // Boucle pour revenir à la ville de départ
+        pathText.append(path.get(0).getName());
         bestPathDisplay.setText(pathText.toString());
     }
 
@@ -186,22 +168,42 @@ public class TSPPanel extends JPanel {
     }
 
     private void moveToNextCity(List<City> path) {
-        if (currentCityIndex >= path.size()) {
-            animationTimer.stop();
+        if (currentCityIndex >= path.size() - 1) {
             JOptionPane.showMessageDialog(this, "Journey completed!", "Info", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
         City currentCity = path.get(currentCityIndex);
-        City nextCity = path.get((currentCityIndex + 1) % path.size());
+        City nextCity = path.get(currentCityIndex + 1);
 
+        double startX = currentCity.getPosition().getX() - ICON_WIDTH / 2;
+        double startY = currentCity.getPosition().getY() - ICON_HEIGHT / 2;
+        targetX = nextCity.getPosition().getX() - ICON_WIDTH / 2;
+        targetY = nextCity.getPosition().getY() - ICON_HEIGHT / 2;
 
-        iconX = (int) currentCity.getPosition().getX() - ICON_WIDTH / 2;
-        iconY = (int) currentCity.getPosition().getY() - ICON_HEIGHT / 2;
+        double distance = Math.hypot(targetX - startX, targetY - startY);
+        int steps = (int) (distance / STEP_SIZE);
+        deltaX = (targetX - startX) / steps;
+        deltaY = (targetY - startY) / steps;
 
+        // Add the line to the trajectoryLines list
+        trajectoryLines.add(new Line2D.Double(startX +20 , startY + 50, targetX +20, targetY  +50));
 
-        currentCityIndex++;
-        repaint();
+        animationTimer = new Timer(ANIMATION_DELAY, new ActionListener() {
+            int step = 0;
+            public void actionPerformed(ActionEvent e) {
+                if (step >= steps) {
+                    animationTimer.stop();
+                    currentCityIndex++;
+                    moveToNextCity(path);
+                } else {
+                    iconX += deltaX;
+                    iconY += deltaY;
+                    step++;
+                    repaint();
+                }
+            }
+        });
+        animationTimer.start();
     }
-
 }
