@@ -86,13 +86,13 @@ public class TSPPanel extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Si le chemin est disponible, tracer le chemin et déplacer la personne
+        // Tracer les lignes du meilleur chemin
         if (!bestPaths.isEmpty() && currentCityIndex < bestPaths.size()) {
-            // Récupérer le premier meilleur chemin
-            List<City> bestPath = bestPaths.get(0).getRoute();  // Liste des villes du chemin
+            // Récupérer le premier meilleur chemin (list de villes)
+            List<City> bestPath = bestPaths.get(0).getRoute();  // Ou une autre liste de votre choix si vous en avez plusieurs
 
-            // Tracer les lignes du chemin jusqu'à la ville actuelle de la personne
-            for (int i = 0; i < currentCityIndex; i++) {
+
+            for (int i = 0; i < bestPath.size() - 1; i++) {
                 City city1 = bestPath.get(i);
                 City city2 = bestPath.get(i + 1);
                 int x1 = (int) city1.getPosition().getX();
@@ -100,26 +100,11 @@ public class TSPPanel extends JPanel {
                 int x2 = (int) city2.getPosition().getX();
                 int y2 = (int) city2.getPosition().getY();
 
+
                 g2d.setColor(Color.BLUE);
                 g2d.setStroke(new BasicStroke(2));
-                g2d.drawLine(x1, y1, x2, y2);  // Tracer la ligne entre city1 et city2
+                g2d.drawLine(x1-15, y1 -15, x2-15, y2-15);
             }
-
-            // Dessiner la ligne entre la dernière ville de la personne et la ville actuelle
-            if (currentCityIndex < bestPath.size() - 1) {
-                City currentCity = bestPath.get(currentCityIndex);
-                City nextCity = bestPath.get(currentCityIndex + 1);
-                int x1 = (int) currentCity.getPosition().getX();
-                int y1 = (int) currentCity.getPosition().getY();
-                int x2 = (int) nextCity.getPosition().getX();
-                int y2 = (int) nextCity.getPosition().getY();
-
-                g2d.setColor(Color.RED);
-                g2d.setStroke(new BasicStroke(2));
-                g2d.drawLine(x1, y1, x2, y2);  // Tracer la ligne jusqu'à la position de la personne
-            }
-
-            g2d.drawImage(personIcon.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_SMOOTH), iconX, iconY, null);
         }
 
         // Dessiner les icônes des villes
@@ -133,12 +118,11 @@ public class TSPPanel extends JPanel {
             g2d.drawString(city.getName(), x + 10, y);
         }
 
-        // Dessiner l'icône de la personne (suivant le chemin)
-//        if (!bestPaths.isEmpty() && currentCityIndex < bestPaths.size()) {
-//            g2d.drawImage(personIcon.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_SMOOTH), iconX, iconY, null);
-//        }
+        // Dessiner la personne si le chemin a démarré
+        if (!bestPaths.isEmpty() && currentCityIndex < bestPaths.size()) {
+            g2d.drawImage(personIcon.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_SMOOTH), iconX, iconY, null);
+        }
     }
-
 
     private void startJourney() {
         String startingTownName = startingTownInput.getText().trim();
@@ -208,29 +192,16 @@ public class TSPPanel extends JPanel {
             return;
         }
 
-        // Obtenir la ville actuelle et la ville suivante
         City currentCity = path.get(currentCityIndex);
-        City nextCity = path.get((currentCityIndex + 1) % path.size());  // La ville suivante
+        City nextCity = path.get((currentCityIndex + 1) % path.size());
 
-        // Mettre à jour la position de l'icône de la personne
+
         iconX = (int) currentCity.getPosition().getX() - ICON_WIDTH / 2;
         iconY = (int) currentCity.getPosition().getY() - ICON_HEIGHT / 2;
 
-        // Passer à la ville suivante dans le chemin
+
         currentCityIndex++;
-
-        // Si ce n'est pas la dernière ville, continuez l'animation
-        if (currentCityIndex < path.size()) {
-            City nextCityUpdated = path.get(currentCityIndex);
-            // Calculer les coordonnées intermédiaires pour rendre l'animation fluide
-            int nextX = (int) nextCityUpdated.getPosition().getX();
-            int nextY = (int) nextCityUpdated.getPosition().getY();
-            iconX += (nextX - iconX) / 10;
-            iconY += (nextY - iconY) / 10;
-        }
-
-        repaint();  // Redessiner pour afficher la nouvelle position de la personne
+        repaint();
     }
-
 
 }
