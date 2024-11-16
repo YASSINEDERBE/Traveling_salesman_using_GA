@@ -55,7 +55,7 @@ public class TSPPanel extends JPanel {
         controlPanel.add(startingTownInput);
         controlPanel.add(startButton);
 
-        bestPathDisplay = new JTextArea(1, 40);
+        bestPathDisplay = new JTextArea(1, 50);
         bestPathDisplay.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(bestPathDisplay);
         JPanel sidePanel = new JPanel(new BorderLayout());
