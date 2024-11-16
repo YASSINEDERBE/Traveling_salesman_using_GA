@@ -19,7 +19,7 @@ public class MultiObjectiveGA {
         this.mutationRate = mutationRate;
     }
 
-    public class Individual {
+    public static class Individual {
         private List<City> route;
         private double distance;
         private double time;

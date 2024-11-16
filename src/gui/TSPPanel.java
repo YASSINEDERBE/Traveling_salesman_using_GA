@@ -2,8 +2,6 @@ package gui;
 
 import algorithm.MultiObjectiveGA;
 import model.City;
-import model.Position;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -14,25 +12,27 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.awt.Font.BOLD;
+import static java.awt.Font.MONOSPACED;
+
 public class TSPPanel extends JPanel {
-    private List<City> cities;
+    private final List<City> cities;
     private Image[] townIcons;
     private Image personIcon;
     private final int ICON_WIDTH = 90;
     private final int ICON_HEIGHT = 90;
 
-    private JTextField startingTownInput;
-    private JButton startButton;
-    private JTextArea bestPathDisplay;
+    private final JTextField startingTownInput;
+    private final JTextArea bestPathDisplay;
     private int currentCityIndex = 0;
     private Timer animationTimer;
     private double iconX, iconY;
-    private double targetX, targetY;
+    private double targetX;
     private double deltaX, deltaY;
     private List<MultiObjectiveGA.Individual> bestPaths = new ArrayList<>();
     private List<Line2D> trajectoryLines = new ArrayList<>();  // List to store drawn lines
-    private static final int ANIMATION_DELAY = 1;
-    private static final int STEP_SIZE = 5;
+    private static final int ANIMATION_DELAY = 9;
+    private static final int STEP_SIZE = 50;
 
     public TSPPanel(List<City> cities) {
         this.cities = cities;
@@ -42,7 +42,7 @@ public class TSPPanel extends JPanel {
 
         JPanel controlPanel = new JPanel();
         startingTownInput = new JTextField(10);
-        startButton = new JButton("Start Journey");
+        JButton startButton = new JButton("Start Journey");
 
         startButton.addActionListener(new ActionListener() {
             @Override
@@ -55,7 +55,7 @@ public class TSPPanel extends JPanel {
         controlPanel.add(startingTownInput);
         controlPanel.add(startButton);
 
-        bestPathDisplay = new JTextArea(120, 20);
+        bestPathDisplay = new JTextArea(1, 40);
         bestPathDisplay.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(bestPathDisplay);
         JPanel sidePanel = new JPanel(new BorderLayout());
@@ -87,14 +87,29 @@ public class TSPPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
+        Font font = new Font("Monospaced", Font.BOLD, 20);
+        g2d.setColor(Color.BLACK);
+        g2d.setFont(font);
+
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         // Draw all the trajectory lines (from the previous path)
-        g2d.setColor(Color.BLUE);
+
         g2d.setStroke(new BasicStroke(3));
         for (Line2D line : trajectoryLines) {
             g2d.draw(line);
         }
+        // total distance
+        double totalDistance =0.0;
+        double totalTime =0.0;
+        for(MultiObjectiveGA.Individual i : bestPaths){
+            totalDistance+= i.getDistance();
+            totalTime+= i.getTime();
+
+        }
+
+        g2d.drawString("Distance: " + totalDistance  , 550 , 70 );
+        g2d.drawString("Time: " + totalTime , 950 , 70 );
 
         // Draw city icons
         for (int i = 0; i < cities.size(); i++) {
@@ -179,7 +194,7 @@ public class TSPPanel extends JPanel {
         double startX = currentCity.getPosition().getX() - ICON_WIDTH / 2;
         double startY = currentCity.getPosition().getY() - ICON_HEIGHT / 2;
         targetX = nextCity.getPosition().getX() - ICON_WIDTH / 2;
-        targetY = nextCity.getPosition().getY() - ICON_HEIGHT / 2;
+        double targetY = nextCity.getPosition().getY() - ICON_HEIGHT / 2;
 
         double distance = Math.hypot(targetX - startX, targetY - startY);
         int steps = (int) (distance / STEP_SIZE);
@@ -187,7 +202,7 @@ public class TSPPanel extends JPanel {
         deltaY = (targetY - startY) / steps;
 
         // Add the line to the trajectoryLines list
-        trajectoryLines.add(new Line2D.Double(startX +20 , startY + 50, targetX +20, targetY  +50));
+        trajectoryLines.add(new Line2D.Double(startX +20 , startY + 50, targetX +20, targetY +50));
 
         animationTimer = new Timer(ANIMATION_DELAY, new ActionListener() {
             int step = 0;
